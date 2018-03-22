@@ -47,6 +47,10 @@ public class CrudRepository<T> extends Repository<T> {
         return obj;
     }
 
+    /**
+     * @param t
+     * @return 返回t在数据库的id
+     */
     public int save(T t) {
         Class c = t.getClass();
         if (!c.isAnnotationPresent(Table.class)) {
@@ -91,7 +95,7 @@ public class CrudRepository<T> extends Repository<T> {
             } catch (NoSuchFieldException e) {
                 e.printStackTrace();
             }
-            sql.append(generateStringByFieldValueType(fieldValue));
+            paramValue.append(generateStringByFieldValueType(fieldValue));
             paramValue.append(",");
         }
         sql.setCharAt(sql.length() - 1, ')');
@@ -171,7 +175,8 @@ public class CrudRepository<T> extends Repository<T> {
         logger.info(sql.toString());
         return super.executeUpdateAndDelete(sql.toString());
     }
-    public int remove(int id,Class<T> t) {
+
+    public int remove(int id, Class<T> t) {
         T obj = null;
         StringBuilder sql = new StringBuilder();
         try {
@@ -200,6 +205,7 @@ public class CrudRepository<T> extends Repository<T> {
         logger.info(sql.toString());
         return super.executeUpdateAndDelete(sql.toString());
     }
+
     public List<T> list(int startRecord, int pageSize, Class<T> t) {
         T obj = null;
         StringBuilder sql = new StringBuilder();
@@ -221,8 +227,39 @@ public class CrudRepository<T> extends Repository<T> {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+        logger.info(sql.toString());
         return super.executeList(sql.toString(), t);
     }
+
+    public int count(Class<T> t) {
+        T obj = null;
+        StringBuilder sql = new StringBuilder();
+        try {
+            obj = t.newInstance();
+            Class c = obj.getClass();
+            if (!c.isAnnotationPresent(Table.class)) {
+                return 0;
+            }
+            Table table = (Table) c.getAnnotation(Table.class);
+            String tableName = table.value();
+            sql.append("select count(*) from ")
+                    .append(tableName);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        logger.info(sql.toString());
+        return super.getCountRow(sql.toString());
+
+    }
+
+    /**
+     * 判断属性值得类型来设置进行sql拼接时是否需要加“”或其他处理
+     *
+     * @param fieldValue
+     * @return
+     */
     private String generateStringByFieldValueType(Object fieldValue) {
         StringBuilder stringBuilder = new StringBuilder();
         if (fieldValue instanceof String) {

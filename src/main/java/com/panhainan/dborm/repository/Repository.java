@@ -10,16 +10,16 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Repository<T> {
+class Repository<T> {
 
     private Logger logger = Logger.getLogger(this.toString());
+
     /**
-     * @date 2015-4-9
-     * @TODO 执行插入语句
      * @param insertSql
      * @return 插入的数据的id
+     * 执行插入语句
      */
-    protected int executeInsert(String insertSql) {
+    int executeInsert(String insertSql) {
         Connection conn = DBUtil.getConnection();
         PreparedStatement pstm = null;
         ResultSet rs = null;
@@ -34,7 +34,7 @@ public class Repository<T> {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } finally {
             DBUtil.closeConnection(conn, pstm, rs);
         }
@@ -42,12 +42,11 @@ public class Repository<T> {
     }
 
     /**
-     * @date 2015-4-9
-     * @TODO 执行更新语句或者删除语句
      * @param updateSql
      * @return 数据库受影响的行数
+     * 执行更新语句或者删除语句
      */
-    protected int executeUpdateAndDelete(String updateSql) {
+    int executeUpdateAndDelete(String updateSql) {
         Connection conn = DBUtil.getConnection();
         PreparedStatement pstm = null;
         int updateResult = 0;
@@ -56,7 +55,7 @@ public class Repository<T> {
             updateResult = pstm.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } finally {
             DBUtil.closeConnection(conn, pstm, null);
         }
@@ -64,16 +63,15 @@ public class Repository<T> {
     }
 
     /**
-     * @date 2015-4-10
-     * @TODO 通过数据库标识字段id查找
      * @param sql
      * @param obj
      * @return T
+     * 通过数据库标识字段id查找
      */
-    protected T executeGet(String sql, Class<T> obj) {
+    T executeGet(String sql, Class<T> obj) {
         Connection conn = DBUtil.getConnection();
-        PreparedStatement pstm = null;
-        ResultSet rs = null;
+        PreparedStatement pstm;
+        ResultSet rs;
         T o = null;
         try {
             pstm = conn.prepareStatement(sql);
@@ -84,30 +82,29 @@ public class Repository<T> {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (InstantiationException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         }
         return o;
     }
 
     /**
-     * @date 2015-4-10
-     * @TODO 根据参数params获取list
      * @param sql
      * @param c
      * @return List
+     * 根据参数params获取list
      */
-    protected List<T> executeList(String sql, Class<T> c) {
+    List<T> executeList(String sql, Class<T> c) {
         Connection conn = DBUtil.getConnection();
-        PreparedStatement pstm = null;
-        ResultSet rs = null;
+        PreparedStatement pstm;
+        ResultSet rs;
         List<T> listObjects = null;
-        T o = null;
+        T o;
         try {
             pstm = conn.prepareStatement(sql);
             rs = pstm.executeQuery();
@@ -119,49 +116,48 @@ public class Repository<T> {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (InstantiationException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         }
         return listObjects;
     }
 
     /**
-     * @date 2015-4-11
-     * @TODO 获取总数
      * @param sql
-     * @param params
      * @return
+     * @date 2015-4-11
+     * 获取总数
      */
-    protected int getCountRow(String sql,Object...params){
+    protected int getCountRow(String sql) {
         Connection conn = DBUtil.getConnection();
         PreparedStatement pstm = null;
         ResultSet rs = null;
-        int countRow=0;
+        int countRow = 0;
         try {
             pstm = conn.prepareStatement(sql);
-            setParams(pstm, params);
             rs = pstm.executeQuery();
-            if(rs.next()){
+            if (rs.next()) {
                 countRow = rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         }
 
         return countRow;
     }
+
     /**
-     * @date 2015-4-10
-     * @TODO 将数据库中查询出来的结果集ResultSet转化为实体
      * @param c
      * @param rs
      * @return T
+     * @date 2015-4-10
+     * 将数据库中查询出来的结果集ResultSet转化为实体
      */
     private T setTableToEntity(Class<T> c, ResultSet rs) {
         T o = null;
@@ -174,9 +170,10 @@ public class Repository<T> {
             for (int i = 0; i < columnCount; i++) {
                 columnName[i] = rsmd.getColumnName(i + 1);
                 StringBuilder fieldName = new StringBuilder(columnName[i]);
-                while(fieldName.toString().contains("_")){
+                //当属性名包含下划线时，将下划线去掉，同时将下划线后面的第一个字母大写，形成驼峰命名法。
+                while (fieldName.toString().contains("_")) {
                     int index = fieldName.indexOf("_");
-                    fieldName.replace(index,index+2, String.valueOf(Character.toUpperCase(fieldName.charAt(index+1))));
+                    fieldName.replace(index, index + 2, String.valueOf(Character.toUpperCase(fieldName.charAt(index + 1))));
                 }
                 Class<?> paramType = c.getDeclaredField(fieldName.toString()).getType();
                 fieldName.setCharAt(0, Character.toUpperCase(fieldName.charAt(0)));
@@ -186,15 +183,14 @@ public class Repository<T> {
                 if ("java.lang.Integer".equals(columnClassName[i])) {
                     Integer i1 = rs.getInt(columnName[i]);
                     //数据库类型为int，可能对象类型为boolean，此时需要进行处理
-                    if("boolean".equalsIgnoreCase(paramType.toString())){
-                        if(i1>0)
+                    if ("boolean".equalsIgnoreCase(paramType.toString())) {
+                        if (i1 > 0)
                             md.invoke(o, true);
                         else
                             md.invoke(o, false);
-                    }else{
+                    } else {
                         md.invoke(o, i1);
                     }
-
                 } else if ("java.lang.String".equals(columnClassName[i])) {
                     md.invoke(o, rs.getString(columnName[i]));
                 } else if ("java.lang.Double".equals(columnClassName[i])) {
@@ -217,38 +213,38 @@ public class Repository<T> {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (InvocationTargetException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (SecurityException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         } catch (InstantiationException e) {
             e.printStackTrace();
-            logger.log(Level.SEVERE,"**Error**:" + e.getMessage());
+            logger.log(Level.SEVERE, "**Error**:" + e.getMessage());
         }
         return o;
     }
 
     /**
-     * @date 2015-4-9
-     * @TODO 设置SQL语句中的？参数
      * @param pstm
      * @param params
      * @throws SQLException
+     * @date 2015-4-9
+     * 设置SQL语句中的？参数
      */
     private void setParams(PreparedStatement pstm, Object[] params)
             throws SQLException {
@@ -269,7 +265,7 @@ public class Repository<T> {
             } else if (param instanceof Boolean) {
                 pstm.setBoolean(i + 1, (Boolean) param);
             } else if (param instanceof java.util.Date) {
-                pstm.setTimestamp(i + 1, new java.sql.Timestamp(((java.util.Date) param).getTime()) );
+                pstm.setTimestamp(i + 1, new java.sql.Timestamp(((java.util.Date) param).getTime()));
             }
         }
     }

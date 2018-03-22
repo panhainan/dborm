@@ -11,7 +11,7 @@ public class UserRepositoryTest {
     @Test
     public void get(){
         UserRepository userRepository = new UserRepository();
-        User user = userRepository.get(3,User.class);
+        User user = userRepository.get(1,User.class);
         logger.info(user.toString());
 
     }
@@ -39,8 +39,14 @@ public class UserRepositoryTest {
     @Test
     public void list(){
         UserRepository userRepository = new UserRepository();
-        List<User> users = userRepository.list(0,2,User.class);
+        List<User> users = userRepository.list(1,2,User.class);
         logger.info(users.toString());
 
+    }
+    @Test
+    public void count(){
+        UserRepository userRepository = new UserRepository();
+        int result = userRepository.count(User.class);
+        logger.info("result:"+result);
     }
 }
